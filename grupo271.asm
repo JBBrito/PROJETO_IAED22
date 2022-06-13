@@ -61,7 +61,7 @@ COLUNA_BONECO_4		EQU  32		; linha do boneco 4
 COLUNA_BONECO_5		EQU  40	    ; linha do boneco 5
 COLUNA_BONECO_6		EQU  48	    ; linha do boneco 6
 COLUNA_BONECO_7		EQU  56	    ; linha do boneco 7			
-LINHA_INICIAL		EQU 5
+LINHA_INICIAL		EQU 0
 
 LARGURA_METEORO_MAIOR	EQU 5		; largura do meteoro maior e da nave inimiga maior
 ALTURA_METEORO_MAIOR	EQU 5		; altura do meteoro maior e da nave inimiga maior
