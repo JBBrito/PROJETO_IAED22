@@ -298,22 +298,49 @@ posição_meteoro_maior:
 	
 mostra_meteoro_maior:
 	CALL	desenha_meteoro_maior		; desenha o meteoro maior a partir da tabela
-	
-espera_nao_tecla:			; neste ciclo espera-se até NÃO haver nenhuma tecla premida
-	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
-	CALL	teclado			; leitura às teclas
-	CMP	R0, 0
-	JNZ	espera_nao_tecla	; espera, enquanto houver tecla uma tecla carregada
+
 
 mostra_boneco:
 	CALL	desenha_boneco			; desenha o boneco a partir da tabela
 	CALL 	atraso					; facilita a visualizaçao do movimento
 	
+
+; **********************************************************************
+; Processo
+;
+; TECLADO - Processo que deteta quando se carrega numa tecla
+;		  do teclado e escreve o valor da tecla num LOCK.
+;
+; **********************************************************************
+
+
+PROCESS SP_inicial_teclado
+	
+teclado_processo:	
+	MOV  R6, LINHA_TECLADO
+	MOV R0, 0
+	
+	
+espera_nao_tecla:			; neste ciclo espera-se até NÃO haver nenhuma tecla premida
+	WAIT
+							;
+							;
+	MOV  R6, LINHA_TECLADO	; linha a testar no teclado
+	CALL	teclado			; leitura às teclas
+	CMP	R0, 0
+	JNZ	espera_nao_tecla	; espera, enquanto houver tecla uma tecla carregada
+
 espera_tecla:						; neste ciclo espera-se até uma tecla ser premida
+	WAIT
+									;
+									;
+	MOV [tecla_carregada], R0
 	MOV  R6, LINHA_TECLADO			; linha a testar no teclado
 	CALL	teclado					; leitura às teclas
 	CMP	R0, 0
-	JZ	espera_tecla				; espera, enquanto não houver tecla
+	JZ	espera_tecla	; espera, enquanto não houver tecla
+	SHR R6, 5
+	MOV [tecla_carregada], R0
 	SUB R0, 1						; retorna o vavlor obtido para o valor real da tecla
 	JZ diminui_display				; diminui o valor do display em 5
 	CMP R0, 1	
@@ -336,10 +363,32 @@ aumenta_display:
 testa_direita:
 	MOV R6, TECLA_DIREITA			; verifica se a tecla precionada devera mexer o rover para a direita
 	CMP	R0, R6
-	JNZ espera_nao_tecla
+	JNZ espera_tecla
 	MOV	R7, +1						; vai deslocar para a direita
 	JMP ve_limites
 	
+
+RESET_R8:
+	CALL RESET_R8_rotina		;rotina para R8 ficar com o seu valor original
+	JMP desce_meteoro
+
+ve_limites:
+	MOV	R6, [R4]			; obtém a largura do boneco
+	CALL testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
+	CMP	R7, 0
+	JZ	espera_tecla		; se não é para movimentar o objeto, vai ler o teclado de novo
+
+move_boneco:
+	MOV	R10, 0			; som com número 0 (som do rover)
+	MOV [TOCA_SOM], R10
+	CALL apaga_boneco		; apaga o boneco na sua posição corrente
+	
+coluna_seguinte:
+	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
+	CALL desenha_boneco
+	CALL atraso
+	JMP	espera_tecla		; vai desenhar o boneco de novo
+
 desce_meteoro:
 	CALL apaga_meteoro_maior	 	; remove o meteoro da posição original
 	MOV R6, LIMITE_MAX_DISPLAY_LINHA		; verificar se o meteoro já chegou ao fundo do ecrã
@@ -350,26 +399,6 @@ desce_meteoro:
 	ADD R8, 1				; move o meteoro uma unidade para baixo
 	CALL desenha_meteoro_maior		; insere o meteoro na nova posição 
 	JMP espera_nao_tecla
-
-RESET_R8:
-	CALL RESET_R8_rotina		;rotina para R8 ficar com o seu valor original
-	JMP desce_meteoro
-
-ve_limites:
-	MOV	R6, [R4]			; obtém a largura do boneco
-	CALL	testa_limites		; vê se chegou aos limites do ecrã e se sim força R7 a 0
-	CMP	R7, 0
-	JZ	espera_tecla		; se não é para movimentar o objeto, vai ler o teclado de novo
-
-move_boneco:
-	MOV	R10, 0			; som com número 0 (som do rover)
-	MOV [TOCA_SOM], R10
-	CALL	apaga_boneco		; apaga o boneco na sua posição corrente
-	
-coluna_seguinte:
-	ADD	R2, R7			; para desenhar objeto na coluna seguinte (direita ou esquerda)
-
-	JMP	mostra_boneco		; vai desenhar o boneco de novo
 
 
 ; **********************************************************************
